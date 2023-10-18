@@ -79,18 +79,23 @@ class Node:
         self.mbr = [x1, y1, x2, y2]
 
     # based on surface area
+
+    # based on min axis
     def get_needed_enlargement(self, rect_b):
         rect_a = self.mbr
-        width_a = rect_a[1] - rect_a[0]
-        height_a = rect_a[3] - rect_a[2]
-        width_b = rect_b[1] - rect_b[0]
-        height_b = rect_b[3] - rect_b[2]
+        x1_a, y1_a, x2_a, y2_a = rect_a
+        x1_b, y1_b, x2_b, y2_b = rect_b
 
-        width_diff = max(0, width_b - width_a)
-        height_diff = max(0, height_b - height_a)
-        surface_area_enlargement = width_diff * height_a + height_diff * width_a
+        # Calculate the width and height of each rectangle
+        width_a = x2_a - x1_a
+        height_a = y2_a - y1_a
+        width_b = x2_b - x1_b
+        height_b = y2_b - y1_b
 
-        return surface_area_enlargement
+        # Calculate the surface area needed to enlarge A to fit within B
+        enlargement_area = max(0, (width_b - width_a) * height_b) + max(0, width_a * (height_b - height_a))
+
+        return enlargement_area
 
 
 # As defined in paper
@@ -275,7 +280,7 @@ def draw_rectangles():
         ax.add_patch(patches.Rectangle((x1 - SP, y1 - SP), SP * 2 + x2 - x1, SP * 2 + y2 - y1, fill=False, linewidth=2,
                                        linestyle='-',
                                        edgecolor=colour))
-        ax.text(x2 - 1, y2 - 0.1, node.label, color='black', fontsize=12, va='top', ha='left')
+        ax.text(x1, y2 - 0.1, node.label, color='black', fontsize=12, va='top', ha='left')
 
 
 for _ in range(4):
