@@ -62,6 +62,7 @@ class Node:
             x2 = max(x2, rect[2])
             y2 = max(y2, rect[3])
         self.mbr = [x1, y1, x2, y2]
+
     def calculate_mbrs(self):
         # Calculate MBRs of children first
         if not self.is_leaf():
@@ -83,19 +84,12 @@ class Node:
     # based on min axis
     def get_needed_enlargement(self, rect_b):
         rect_a = self.mbr
-        x1_a, y1_a, x2_a, y2_a = rect_a
-        x1_b, y1_b, x2_b, y2_b = rect_b
 
-        # Calculate the width and height of each rectangle
-        width_a = x2_a - x1_a
-        height_a = y2_a - y1_a
-        width_b = x2_b - x1_b
-        height_b = y2_b - y1_b
+        enlarged_rect = math_utils.calculate_mbr([rect_a, rect_b])
+        enlarged_area = math_utils.get_area(enlarged_rect)
+        old_area = math_utils.get_area(rect_a)
 
-        # Calculate the surface area needed to enlarge A to fit within B
-        enlargement_area = max(0, (width_b - width_a) * height_b) + max(0, width_a * (height_b - height_a))
-
-        return enlargement_area
+        return enlarged_area-old_area
 
 
 # As defined in paper
@@ -283,12 +277,12 @@ def draw_rectangles():
         ax.text(x1, y2 - 0.1, node.label, color='black', fontsize=12, va='top', ha='left')
 
 
-for _ in range(4):
-    print(str(_))
+for _ in range(9):
+    if _ == 8:
+        print(str(_))
     x, y = random.randint(0, 10), random.randint(0, 10)
     r = [x, y, x + random.randint(1, 5), y + random.randint(1, 5)]
     insert_entry(r)
-
 
 draw_rectangles()
 
