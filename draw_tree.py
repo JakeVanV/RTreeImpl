@@ -11,7 +11,7 @@ def traverse_and_add(t, root):
 
     t.add_face(TextFace(root.label), column=0)
     if root.is_leaf():
-        for ent in root.entries:
+        for ent in root.children:
             c = child.add_child(None, ent.label)
             style = NodeStyle()
             style['fgcolor'] = tuple_to_hex_color(ent.color)

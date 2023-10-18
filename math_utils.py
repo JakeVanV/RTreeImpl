@@ -12,4 +12,4 @@ def calculate_mbr(rects):
     return [x1, y1, x2, y2]
 
 def get_area(rect):
-    return abs((rect[0]-rect[2]) * (rect[1]-[rect[3]]))
+    return abs((rect[0]-rect[2]) * (rect[1]-rect[3]))
