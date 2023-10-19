@@ -10,7 +10,7 @@ import itertools
 # PARAMETERS
 
 M = 4
-MIN_ELEM = 2
+MIN_ELEM = 1
 
 label_count = 0
 
@@ -45,6 +45,8 @@ class Node:
         label_count += 1
         self.label = "M" + str(label_count)
         self.parent = parent
+
+        self.color = (0,0,0)
 
     def is_leaf(self) -> bool:
         return isinstance(self.children[0], TreeEntry)
@@ -89,7 +91,7 @@ class Node:
         enlarged_area = math_utils.get_area(enlarged_rect)
         old_area = math_utils.get_area(rect_a)
 
-        return enlarged_area-old_area
+        return enlarged_area - old_area
 
 
 # As defined in paper
@@ -130,10 +132,10 @@ def split_node(node):
     node_b.children.extend(best_combo[1])
 
     # TODO no re-calculating the entire MBR tree
-    # node.calculate_mbr_self()
-    # node_b.calculate_mbr_self()
-    # node.parent.calculate_mbr_self()
-    root_node.calculate_mbrs()
+    node.calculate_mbr_self()
+    node_b.calculate_mbr_self()
+    node.parent.calculate_mbr_self()
+    # root_node.calculate_mbrs()
 
 
 def adjust_tree(node):
@@ -163,26 +165,6 @@ def get_all_split_possibilities(lis):
 
 root_node = Node(parent=None)
 
-last_entry = None
-
-
-def generate_tree(node, max_depth):
-    if max_depth == 0:
-        num_entries = 4
-        for _ in range(num_entries):
-            x, y = random.uniform(0, 100), random.uniform(0, 100)
-            rect = [x, y, x + random.uniform(1, 44), y + random.uniform(1, 44)]
-            entry = TreeEntry(rect, node)
-            node.children.append(entry)
-            global last_entry
-            last_entry = entry
-    else:
-        num_children = 4
-        for _ in range(num_children):
-            child = Node(parent=node)
-            generate_tree(child, max_depth - 1)
-            node.children.append(child)
-
 
 def insert_entry(rect):
     entry = TreeEntry(rect, parent=None)
@@ -190,34 +172,20 @@ def insert_entry(rect):
     leafnode.children.append(entry)
     entry.parent = leafnode
     adjust_tree(leafnode)
-    # TODO no re-calculating the entire MBR tree
+# TODO no re-calculating the entire MBR tree
     root_node.calculate_mbrs()
 
 
-# generate_tree(root_node, 0)
-# parent = last_entry.parent
+def search_tree(node, search, out):
+    for child in node.children:
+        if math_utils.rect_intersects(child.mbr, search):
+            out.append(child)
+            if not isinstance(child, TreeEntry):
+                search_tree(child, search, out)
+
+
 root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
-
-insert_entry([2, 2, 3, 3])
-
-# nnode = TreeEntry(parent=parent, rect=[1, 1, 2, 2])
-# parent.children.append(nnode)
-# adjust_tree(parent)
-
-# n1 = Node()
-# n2 = Node()
-#
-# n1.entries.append(TreeEntry([3, 3, 4, 4]))
-# n1.entries.append(TreeEntry([5, 5, 10, 10]))
-#
-# n2.entries.append(TreeEntry([2, 3, 4, 8]))
-# n2.entries.append(TreeEntry([5, 1, 10, 7]))
-#
-# root_node.children.append(n1)
-# root_node.children.append(n2)
-
 root_node.calculate_mbrs()
-print("f")
 
 
 def get_leaf_nodes(root, nodes):
@@ -247,14 +215,12 @@ ax.grid(True)
 ax.set_axisbelow(True)
 # ax.yaxis.grid(color='gray', linestyle='dashed')
 # ax.xaxis.grid(color='gray', linestyle='dashed')
-ax.set_xlim(0, 15)
-ax.set_ylim(0, 15)
 ax.locator_params(nbins=10, tight=True)
 # draw
 plt.axis('equal')
 
 
-def draw_rectangles():
+def draw_rectangles(search_rect):
     ax.clear()
     rectangles = []
     nodes = []
@@ -269,22 +235,50 @@ def draw_rectangles():
 
     for node in nodes:
         x1, y1, x2, y2 = node.mbr
-        colour = (0, 0, 0, 0.5)
+        colour = node.color + (0.5,)
         SP = 0.05  # spacer
         ax.add_patch(patches.Rectangle((x1 - SP, y1 - SP), SP * 2 + x2 - x1, SP * 2 + y2 - y1, fill=False, linewidth=2,
                                        linestyle='-',
                                        edgecolor=colour))
         ax.text(x1, y2 - 0.1, node.label, color='black', fontsize=12, va='top', ha='left')
 
+    if search_rect is not None:
+        x, y = search_rect[0], search_rect[1]
+        w, h = search_rect[2] - search_rect[0], search_rect[3] - search_rect[1]
+        ax.add_patch(patches.Rectangle((x, y), w, h, fill=False, linewidth=4,
+                                       linestyle='-',
+                                       edgecolor=(0,1,0)))
+        ax.text(x, y+h-5, 'Search Rect', color='black', fontsize=13, va='top', ha='left')
 
-for _ in range(9):
+    ax.set_xlim(0, 1000)
+    ax.set_ylim(0, 1000)
+
+
+for _ in range(50):
     if _ == 8:
         print(str(_))
-    x, y = random.randint(0, 10), random.randint(0, 10)
-    r = [x, y, x + random.randint(1, 5), y + random.randint(1, 5)]
+    x, y = random.randint(0, 1000), random.randint(0, 1000)
+    r = [x, y, x + random.randint(1, 100), y + random.randint(1, 100)]
     insert_entry(r)
+def paint_search_rects():
+    rectangles = []
+    nodes = []
+    traverse_tree_and_collect_entries(root_node, rectangles, nodes)
+    for x in rectangles:
+        x.color = (0, 0, 0)
+    for y in out:
+        y.color = (0,1,0)
 
-draw_rectangles()
+SEARCH_RECT_DEMO = True
+search = None
+if SEARCH_RECT_DEMO:
+    search = [500, 400, 800, 800]
+    draw_rectangles(None)
+    out = []
+    search_tree(root_node, search, out)
+
+    paint_search_rects()
+draw_rectangles(search_rect=search)
 
 # ETE3 Tree
 

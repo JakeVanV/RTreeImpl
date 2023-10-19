@@ -11,5 +11,13 @@ def calculate_mbr(rects):
         y2 = max(y2, rect[3])
     return [x1, y1, x2, y2]
 
+
 def get_area(rect):
-    return abs((rect[0]-rect[2]) * (rect[1]-rect[3]))
+    return abs((rect[0] - rect[2]) * (rect[1] - rect[3]))
+
+
+def rect_intersects(rect1, rect2):
+    return not (rect1[2] < rect2[0] or  # rect1 is to the left of rect2
+                rect2[2] < rect1[0] or  # rect2 is to the left of rect1
+                rect1[3] < rect2[1] or  # rect1 is above rect2
+                rect2[3] < rect1[1])  # rect2 is above rect1

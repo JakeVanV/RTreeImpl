@@ -8,8 +8,11 @@ def tuple_to_hex_color(rgb_tuple):
     return hex_color
 def traverse_and_add(t, root):
     child = t.add_child(None, root.label)
-
+    style = NodeStyle()
+    style['fgcolor'] = tuple_to_hex_color(root.color)
+    child.set_style(style)
     t.add_face(TextFace(root.label), column=0)
+
     if root.is_leaf():
         for ent in root.children:
             c = child.add_child(None, ent.label)
