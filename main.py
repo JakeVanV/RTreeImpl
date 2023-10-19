@@ -1,6 +1,8 @@
 import colorsys
+import math
 
 import random
+import time
 from time import sleep
 from typing import List
 import draw_tree
@@ -10,7 +12,7 @@ import itertools
 # PARAMETERS
 
 M = 4
-MIN_ELEM = 1
+MIN_ELEM = 2
 
 label_count = 0
 
@@ -46,7 +48,7 @@ class Node:
         self.label = "M" + str(label_count)
         self.parent = parent
 
-        self.color = (0,0,0)
+        self.color = (0, 0, 0)
 
     def is_leaf(self) -> bool:
         return isinstance(self.children[0], TreeEntry)
@@ -172,7 +174,7 @@ def insert_entry(rect):
     leafnode.children.append(entry)
     entry.parent = leafnode
     adjust_tree(leafnode)
-# TODO no re-calculating the entire MBR tree
+    # TODO no re-calculating the entire MBR tree
     root_node.calculate_mbrs()
 
 
@@ -182,10 +184,6 @@ def search_tree(node, search, out):
             out.append(child)
             if not isinstance(child, TreeEntry):
                 search_tree(child, search, out)
-
-
-root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
-root_node.calculate_mbrs()
 
 
 def get_leaf_nodes(root, nodes):
@@ -203,6 +201,33 @@ def traverse_tree_and_collect_entries(node, entry_list, node_list):
     else:
         for child in node.children:
             traverse_tree_and_collect_entries(child, entry_list, node_list)
+
+
+def random_rect():
+    x, y = random.randint(0, 1000), random.randint(0, 1000)
+    r = [x, y, x + random.randint(1, 100), y + random.randint(1, 100)]
+    return r
+
+
+# Generate tree
+def generate_tree():
+    global root_node
+    root_node = Node(parent=None)
+    root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
+    root_node.calculate_mbrs()
+    for _ in range(50):
+        insert_entry(random_rect())
+
+for mvalue in range(4, 100, 5):
+    M = mvalue
+    MIN_ELEM = mvalue//2
+    generate_tree()
+    start = time.time()
+    for _ in range(1000):
+        insert_entry(random_rect())
+    end = time.time()
+    print("Elapsed: " + str((end - start) * 1000) + " for: " + str(mvalue))
+
 
 
 import matplotlib.pyplot as plt
@@ -247,19 +272,13 @@ def draw_rectangles(search_rect):
         w, h = search_rect[2] - search_rect[0], search_rect[3] - search_rect[1]
         ax.add_patch(patches.Rectangle((x, y), w, h, fill=False, linewidth=4,
                                        linestyle='-',
-                                       edgecolor=(0,1,0)))
-        ax.text(x, y+h-5, 'Search Rect', color='black', fontsize=13, va='top', ha='left')
+                                       edgecolor=(0, 1, 0)))
+        ax.text(x, y + h - 5, 'Search Rect', color='black', fontsize=13, va='top', ha='left')
 
     ax.set_xlim(0, 1000)
     ax.set_ylim(0, 1000)
 
 
-for _ in range(50):
-    if _ == 8:
-        print(str(_))
-    x, y = random.randint(0, 1000), random.randint(0, 1000)
-    r = [x, y, x + random.randint(1, 100), y + random.randint(1, 100)]
-    insert_entry(r)
 def paint_search_rects():
     rectangles = []
     nodes = []
@@ -267,7 +286,8 @@ def paint_search_rects():
     for x in rectangles:
         x.color = (0, 0, 0)
     for y in out:
-        y.color = (0,1,0)
+        y.color = (0, 1, 0)
+
 
 SEARCH_RECT_DEMO = True
 search = None
