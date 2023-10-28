@@ -112,8 +112,43 @@ def choose_leaf(insert_child):
 
         node = min_child
 
+def quadratic_pick_seeds(node):
+    max_elem = None
+    max_dist = 10000000000000
+    for a in node.children:
+        for b in node.children:
+            dist_sq = (a.mbr.x1 - b.mbr.x2)**2 + (a.mbr.y1 - b.mbr.y2)**2
+            if dist_sq > max_dist:
+                max_elem = (a, b)
+                max_dist = dist_sq
+
+    return max_elem
+
+def linear_pick_seeds(node):
+    # LPS1
+    min_x_elem = min(node.children, key=lambda n: n.mbr[2])
+    max_x_elem = max(node.children, key=lambda n: n.mbr[0])
+    min_y_elem = min(node.children, key=lambda n: n.mbr[3])
+    max_y_elem = max(node.children, key=lambda n: n.mbr[1])
+    # LPS2
+    x_length = node.mbr[2]-node.mbr[0]
+    y_length = node.mbr[3]-node.mbr[1]
+    x_dist = abs(min_x_elem.mbr[2]-max_x_elem.mbr[0])
+    y_dist = abs(min_y_elem.mbr[3]-max_y_elem.mbr[1])
+    x_length /= x_dist
+    y_length /= y_dist
+    # LPS3
+    if x_length < y_length:
+        return min_y_elem, max_y_elem
+    else:
+        return min_x_elem, max_x_elem
+
 
 def split_node(node):
+    # emin, emax = linear_pick_seeds(node)
+
+
+
     all_combos = get_all_split_possibilities(node.children)
     best_combo = None
     min_size = 1000000000000
@@ -133,11 +168,9 @@ def split_node(node):
     node.children.extend(best_combo[0])
     node_b.children.extend(best_combo[1])
 
-    # TODO no re-calculating the entire MBR tree
     node.calculate_mbr_self()
     node_b.calculate_mbr_self()
     node.parent.calculate_mbr_self()
-    # root_node.calculate_mbrs()
 
 
 def adjust_tree(node):
@@ -205,7 +238,7 @@ def traverse_tree_and_collect_entries(node, entry_list, node_list):
 
 def random_rect():
     x, y = random.randint(0, 1000), random.randint(0, 1000)
-    r = [x, y, x + random.randint(1, 100), y + random.randint(1, 100)]
+    r = [x, y, x + random.randint(40, 400), y + random.randint(40, 400)]
     return r
 
 
@@ -215,20 +248,22 @@ def generate_tree():
     root_node = Node(parent=None)
     root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
     root_node.calculate_mbrs()
-    for _ in range(50):
+    for _ in range(10):
         insert_entry(random_rect())
+generate_tree()
 
-for mvalue in range(4, 100, 5):
+insert_entry([400, 150, 450, 200])
+# for mvalue in range(4, 100, 5):
+if False:
+    mvalue = 4
     M = mvalue
-    MIN_ELEM = mvalue//2
+    MIN_ELEM = mvalue // 2
     generate_tree()
     start = time.time()
-    for _ in range(1000):
+    for _ in range(10):
         insert_entry(random_rect())
     end = time.time()
     print("Elapsed: " + str((end - start) * 1000) + " for: " + str(mvalue))
-
-
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -289,7 +324,7 @@ def paint_search_rects():
         y.color = (0, 1, 0)
 
 
-SEARCH_RECT_DEMO = True
+SEARCH_RECT_DEMO = False
 search = None
 if SEARCH_RECT_DEMO:
     search = [500, 400, 800, 800]
