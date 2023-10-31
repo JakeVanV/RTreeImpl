@@ -2,6 +2,8 @@ import math
 import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import tqdm
+
 
 def quadratic_pick_seeds(nodes):
     max_elem = None
@@ -77,10 +79,10 @@ def diag(nodes, x_length, y_length):
         return min_y_elem_f, max_y_elem_f
 
 
-total = 100000
+total =1 #100000
 full_hits = 0
 semi_hits = 0
-for xr in range(total):
+for xr in tqdm.tqdm(range(total)):
     M = 4
     boxes = []
     xl, yl = random.randint(50, 200), random.randint(50, 200)
