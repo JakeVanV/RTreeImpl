@@ -3,6 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import tqdm
+import numpy as np
 
 
 def quadratic_pick_seeds(nodes):
@@ -177,39 +178,68 @@ def assign_rects(node_a, node_b, nodes, little_m):
 
 
 
-total = 100000
-full_hits = 0
-semi_hits = 0
+tests_per_mvalue = 1
+test_results_M = []
+test_results_diff = []
+data_range = tqdm.tqdm(range(4, 200), position=1, colour='red')
+for t in data_range:
+    data_range.set_description("M-value %d" % t)
+    full_hits = 0
+    semi_hits = 0
+    total_area_q = 0
+    total_area_l = 0
 
-total_area_q = 0
-total_area_l = 0
-for xr in tqdm.tqdm(range(total)):
-    M = 4
-    boxes = []
-    xl, yl = random.randint(50, 200), random.randint(50, 200)
-    for _ in range(100):
-        x, y = random.randint(0, xl), random.randint(0, yl)
-        boxes.append((x, y, x + 10, y + 10))
+    M = t
+    m = M//2
+    for xr in tqdm.tqdm(range(tests_per_mvalue), position=0, colour='white'):
+        boxes = []
+        xl, yl = random.randint(50, 200), random.randint(50, 200)
+        for _ in range(M):
+            x, y = random.randint(0, xl), random.randint(0, yl)
+            boxes.append((x, y, x + 10, y + 10))
 
-    # A = quadratic_pick_seeds(boxes)
-    A = linear_pick_seeds(boxes, xl, yl)
-    B = diag(boxes, xl, yl)
-    q_group_a, q_group_b, q_mbr_a, q_mbr_b = assign_rects(A[0], A[1], list(boxes), 2)
-    l_group_a, l_group_b, l_mbr_a, l_mbr_b = assign_rects(B[0], B[1], list(boxes), 2)
+        # A = quadratic_pick_seeds(boxes)
+        A = linear_pick_seeds(boxes, xl, yl)
+        B = diag(boxes, xl, yl)
+        q_group_a, q_group_b, q_mbr_a, q_mbr_b = assign_rects(A[0], A[1], list(boxes), m)
+        l_group_a, l_group_b, l_mbr_a, l_mbr_b = assign_rects(B[0], B[1], list(boxes), m)
 
-    if A[0] == B[0] and A[1] == B[1]:
-        full_hits += 1
-    elif A[0] == B[0] or A[1] == B[1]:
-        semi_hits += 1
+        if A[0] == B[0] and A[1] == B[1]:
+            full_hits += 1
+        elif A[0] == B[0] or A[1] == B[1]:
+            semi_hits += 1
 
-    total_area_q += get_area(q_mbr_a) + get_area(q_mbr_b)
-    total_area_l += get_area(l_mbr_a) + get_area(l_mbr_b)
+        total_area_q += get_area(q_mbr_a) + get_area(q_mbr_b)
+        total_area_l += get_area(l_mbr_a) + get_area(l_mbr_b)
+    test_results_M.append(M)
+    # L uses DIAG, Q uses LINEAR or QUADRATIC (comment out A= above)
+    test_results_diff.append(total_area_q/total_area_l)
+
+    # print("FH %d, SH %d TH %d TFAIL %d" % (full_hits, semi_hits, full_hits + semi_hits, 100000 - (full_hits + semi_hits)))
+    # print("LA %d, QA %d DIFF %f" % (total_area_l, total_area_q, (total_area_q / total_area_l)))
+def plot_graph():
+    # Create the bar graph
+    plt.bar(test_results_M, test_results_diff, align='center', alpha=0.7, label='% Difference')
+
+    # Calculate and plot the fitted line (regression line)
+    z = np.polyfit(test_results_M, test_results_diff, 1)
+    p = np.poly1d(z)
+    plt.plot(test_results_M, p(test_results_M), "r--", label='Fit Line')
+
+    # Add labels and a legend
+    plt.xlabel('Rectangles (M)')
+    plt.ylabel('(Linear / 4Axis) %')
+    plt.title('How efficient LinearPickSeeds is compared to 4Axis')
+    plt.legend()
+
+    # Display the plot
+    plt.grid()
+    plt.show()
+
+plot_graph()
 
 
-print("FH %d, SH %d TH %d TFAIL %d" % (full_hits, semi_hits, full_hits+semi_hits, 100000-(full_hits+semi_hits)))
-print("LA %d, QA %d DIFF %f" % (total_area_l, total_area_q, (total_area_q/total_area_l)))
-
-def plot():
+def plot_demo():
     fig, ax = plt.subplots()
 
     # Plot each rectangle as a gray patch
@@ -249,6 +279,6 @@ def plot():
     ax.set_xlim(0, xl)
     ax.set_ylim(0, yl)
     plt.show()
-plot()
+# plot()
 
 
