@@ -1,5 +1,8 @@
 import math
 import random
+import threading
+import time
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import tqdm
@@ -177,21 +180,29 @@ def assign_rects(node_a, node_b, nodes, little_m):
 
 
 
+import _thread
 
-tests_per_mvalue = 1
-test_results_M = []
-test_results_diff = []
-data_range = tqdm.tqdm(range(4, 200), position=1, colour='red')
-for t in data_range:
+
+tests_per_mvalue = 10000
+MAXVAL = 100
+test_results_M = [0 for _ in range(0, MAXVAL)]
+
+test_results_diff = [0 for _ in range(0, MAXVAL)]
+data_range = tqdm.tqdm(range(0, MAXVAL), position=0, colour='red')
+
+completed = 0
+lock = _thread.allocate_lock()
+def run_task_for(nx):
     data_range.set_description("M-value %d" % t)
     full_hits = 0
     semi_hits = 0
     total_area_q = 0
     total_area_l = 0
 
-    M = t
+    M = 4+nx
     m = M//2
-    for xr in tqdm.tqdm(range(tests_per_mvalue), position=0, colour='white'):
+    for xr in range(tests_per_mvalue):
+    # for xr in tqdm.tqdm(range(tests_per_mvalue), position=1+nx):
         boxes = []
         xl, yl = random.randint(50, 200), random.randint(50, 200)
         for _ in range(M):
@@ -211,12 +222,28 @@ for t in data_range:
 
         total_area_q += get_area(q_mbr_a) + get_area(q_mbr_b)
         total_area_l += get_area(l_mbr_a) + get_area(l_mbr_b)
-    test_results_M.append(M)
+    test_results_M[nx] = M
     # L uses DIAG, Q uses LINEAR or QUADRATIC (comment out A= above)
-    test_results_diff.append(total_area_q/total_area_l)
+    test_results_diff[nx] = total_area_q/total_area_l
 
     # print("FH %d, SH %d TH %d TFAIL %d" % (full_hits, semi_hits, full_hits + semi_hits, 100000 - (full_hits + semi_hits)))
     # print("LA %d, QA %d DIFF %f" % (total_area_l, total_area_q, (total_area_q / total_area_l)))
+    lock.acquire()
+    global completed
+    completed += 1
+    print("completed %d" % completed)
+    lock.release()
+
+ran = 0
+for t in data_range:
+    # print("Dispatch Thread %d" % ran)
+    # run_task_for(ran)
+    _thread.start_new_thread(run_task_for, (ran,))
+    ran += 1
+while completed != MAXVAL:
+   time.sleep(1)
+
+print("all done!!!!")
 def plot_graph():
     # Create the bar graph
     plt.bar(test_results_M, test_results_diff, align='center', alpha=0.7, label='% Difference')
