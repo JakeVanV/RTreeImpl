@@ -5,6 +5,9 @@ import random
 import time
 from time import sleep
 from typing import List
+
+import tqdm
+
 import draw_tree
 import math_utils
 import itertools
@@ -248,7 +251,7 @@ def generate_tree():
     root_node = Node(parent=None)
     root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
     root_node.calculate_mbrs()
-    for _ in range(10):
+    for _ in tqdm.tqdm(range(10)):
         insert_entry(random_rect())
 generate_tree()
 

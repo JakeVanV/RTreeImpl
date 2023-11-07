@@ -7,6 +7,7 @@ from time import sleep
 from typing import List
 
 import tqdm
+from matplotlib import patches
 
 import draw_tree
 import math_utils
@@ -30,7 +31,10 @@ class TreeEntry:
         self.label = label_count
 
         self.color = generate_random_color()
+
+
 random.seed(8)
+
 
 def generate_random_color():
     return colorsys.hsv_to_rgb(random.random(), 1, 1)
@@ -244,7 +248,6 @@ def adjust_tree(node):
         adjust_tree(node.parent)
 
 
-
 root_node = Node(parent=None)
 
 
@@ -283,37 +286,51 @@ def traverse_tree_and_collect_entries(node, entry_list, node_list):
             traverse_tree_and_collect_entries(child, entry_list, node_list)
 
 
-MIN_RECT = 40
-MAX_RECT = 400
+# RECTANGLE TYPES:
 
-
-def random_rect():
+# UNIFORM DIST
+def uniform_dist():
     x, y = random.randint(0, 100000), random.randint(0, 100000)
     r = [x, y, x + random.randint(40, 400), y + random.randint(40, 400)]
     return r
 
 
-# RECTANGLE TYPES:
-
-# UNIFORM DIST
-def uniform_dist():
-    MIN_RECT = 40
-    MAX_RECT = 400
-
-
-# DOTS
-def dots():
-    MIN_RECT = 2
-    MAX_RECT = 2
-
-
 # HUGE OVERLAP
 def huge_overlap():
-    MIN_RECT = 1000
-    MAX_RECT = 10000
+    x, y = random.randint(0, 100000), random.randint(0, 100000)
+    r = [x, y, x + random.randint(1000, 10000), y + random.randint(1000, 10000)]
+    return r
 
 
-rect_functions = [uniform_dist, dots, huge_overlap]
+clusters_list = [(random.randint(0, 100000), random.randint(0, 100000)) for _ in range(10)]
+
+
+def gaussian_clusters():
+    x, y = random.choice(clusters_list)
+    DIST = 5000
+    x += random.gauss(0, DIST)
+    y += random.gauss(0, DIST)
+    r = [x, y, x + random.randint(10, 2000), y + random.randint(10, 2000)]
+    return r
+
+
+rect_generator = uniform_dist
+
+SHOW_DISTRIBUTIONS = False
+if SHOW_DISTRIBUTIONS:
+    rects = [rect_generator() for _ in range(3000)]
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    for rect in rects:
+        x1, y1, x2, y2 = rect
+        ax.add_patch(patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=True, linewidth=1,
+                                       edgecolor='black', facecolor=(0, 0, 0, 0.1)))
+    ax.set_title('Rect_generator: ' + rect_generator.__name__)
+    ax.set_xlim(0, 100000)
+    ax.set_ylim(0, 100000)
+    plt.show()
+    exit(1)
 
 
 # Generate tree
@@ -322,31 +339,32 @@ def generate_tree(rect_amount):
     root_node = Node(parent=None)
     root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
     root_node.calculate_mbrs()
-    for _ in tqdm.tqdm(range(rect_amount), position=0):
-        insert_entry(random_rect())
+    for _ in tqdm.tqdm(range(rect_amount), position=2):
+        insert_entry(rect_generator())
 
 
 print("Generating graph data")
 graph_data = dict()
 
 import time
-for mdiv in tqdm.tqdm(range(5, 80, 10)):
-    for M_val in tqdm.tqdm(range(4, 200), position=1, colour='red'):
+
+for mdiv in tqdm.tqdm(range(5, 70, 20), position=0):
+    for M_val in tqdm.tqdm(range(5, 200), position=1, colour='red'):
         M = M_val
-        m_val = M_val*(mdiv/100.0)
+        m_val = M_val * (mdiv / 100.0)
         MIN_ELEM = m_val
         # Reset random seed for each test
         random.seed(8)
 
         # time generation
         tm = time.time()
-        generate_tree(1)
+        generate_tree(6000)
         gen_time = time.time() - tm
 
         tm = time.time()
         # 1000 queries
-        for _ in range(1):
-            search_tree(root_node, random_rect(), [])
+        for _ in range(6000):
+            search_tree(root_node, rect_generator(), [])
         tm = time.time() - tm
 
         if mdiv not in graph_data:
@@ -354,18 +372,22 @@ for mdiv in tqdm.tqdm(range(5, 80, 10)):
         M_list = graph_data[mdiv]
         M_list.append((M_val, gen_time, tm))
 
-
 import matplotlib.pyplot as plt
+
 fig, axs = plt.subplots(2)
 colours = dict()
+color_pct = 0
+
+
 def id_to_random_color(i):
     if i not in colours:
-        random.random()
-        colours[i] = colorsys.hsv_to_rgb(random.random(), 1, 0.8)
+        global color_pct
+        colours[i] = colorsys.hsv_to_rgb(color_pct, 1, 0.9)
+        color_pct += 0.3
     return colours[i]
 
-for m, tpl in graph_data.items():
 
+for m, tpl in graph_data.items():
     M_vals = [s[0] for s in tpl]
     gen_times = [s[1] for s in tpl]
     search_times = [s[2] for s in tpl]
@@ -383,6 +405,8 @@ for ax in axs:
     ax.set_ylabel('Time (ms)')
     ax.legend(loc='upper right')
 
+axs[0].set_title(rect_generator.__name__ + "\nCreation Time vs M-value")
+axs[1].set_title("Search Time vs M-value")
 
 # Show the plot
 plt.show()
