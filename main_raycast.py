@@ -32,7 +32,7 @@ class TreeEntry:
         self.color = generate_random_color()
 
 
-random.seed(8)
+random.seed(87)
 
 
 def generate_random_color():
@@ -115,6 +115,7 @@ def choose_leaf(insert_child):
 
         node = min_child
 
+
 def split_node(node):
     all_combos = get_all_split_possibilities(node.children)
     best_combo = None
@@ -180,7 +181,7 @@ def insert_entry(rect):
 
 def search_tree(node, search, out):
     for child in node.children:
-        if math_utils.rect_intersects(child.mbr, search):
+        if math_utils.intersect_rectangle_ray(child.mbr, search):
             out.append(child)
             if not isinstance(child, TreeEntry):
                 search_tree(child, search, out)
@@ -217,6 +218,8 @@ def generate_tree():
     root_node.calculate_mbrs()
     for _ in tqdm.tqdm(range(10)):
         insert_entry(random_rect())
+
+
 generate_tree()
 
 insert_entry([400, 150, 450, 200])
@@ -269,16 +272,12 @@ def draw_rectangles(search_rect):
                                        edgecolor=colour))
         ax.text(x1, y2 - 0.1, node.label, color='black', fontsize=12, va='top', ha='left')
 
-    if search_rect is not None:
-        x, y = search_rect[0], search_rect[1]
-        w, h = search_rect[2] - search_rect[0], search_rect[3] - search_rect[1]
-        ax.add_patch(patches.Rectangle((x, y), w, h, fill=False, linewidth=4,
-                                       linestyle='-',
-                                       edgecolor=(0, 1, 0)))
-        ax.text(x, y + h - 5, 'Search Rect', color='black', fontsize=13, va='top', ha='left')
+    # todo draw search ray
+    plt.arrow(search_rect[0], search_rect[1], search_rect[2]*1000, search_rect[3]*1000,
+              head_width=10, head_length=10, fc='black', ec='black')
 
-    ax.set_xlim(0, 1000)
-    ax.set_ylim(0, 1000)
+    ax.set_xlim(-300, 1300)
+    ax.set_ylim(-300, 1300)
 
 
 def paint_search_rects():
@@ -287,26 +286,36 @@ def paint_search_rects():
     traverse_tree_and_collect_entries(root_node, rectangles, nodes)
     for x in rectangles:
         x.color = (0, 0, 0)
+    for x in nodes:
+        x.color = (0,0,0)
     for y in out:
         y.color = (0, 1, 0)
 
 
-SEARCH_RECT_DEMO = False
-search = None
-if SEARCH_RECT_DEMO:
-    search = [500, 400, 800, 800]
-    draw_rectangles(None)
-    out = []
-    search_tree(root_node, search, out)
+search = [100,100, 1, 0.5]
+draw_rectangles(search)
+out = []
+search_tree(root_node, search, out)
 
-    paint_search_rects()
+paint_search_rects()
 draw_rectangles(search_rect=search)
 
 # ETE3 Tree
+DRAW_COOL_ASS_CIRCLE_THING = True
+if not DRAW_COOL_ASS_CIRCLE_THING:
+    import draw_tree
+    draw_tree.from_root(root_node)
+    while True:
+        plt.pause(0.1)
+else:
+    ran = 0
+    while True:
+        ran += 0.01
 
-import draw_tree
-
-draw_tree.from_root(root_node)
-
-while True:
-    plt.pause(0.1)
+        plt.pause(0.02)
+        search[2] = math.sin(ran)
+        search[3] = math.cos(ran)
+        out.clear()
+        search_tree(root_node, search, out)
+        paint_search_rects()
+        draw_rectangles(search)
