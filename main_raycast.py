@@ -14,7 +14,7 @@ import itertools
 
 # PARAMETERS
 
-M = 4
+M = 6
 MIN_ELEM = 2
 
 label_count = 0
@@ -32,7 +32,7 @@ class TreeEntry:
         self.color = generate_random_color()
 
 
-random.seed(87)
+random.seed(11)
 
 
 def generate_random_color():
@@ -206,7 +206,7 @@ def traverse_tree_and_collect_entries(node, entry_list, node_list):
 
 def random_rect():
     x, y = random.randint(0, 1000), random.randint(0, 1000)
-    r = [x, y, x + random.randint(40, 400), y + random.randint(40, 400)]
+    r = [x, y, x + random.randint(40, 100), y + random.randint(40, 100)]
     return r
 
 
@@ -216,7 +216,7 @@ def generate_tree():
     root_node = Node(parent=None)
     root_node.children.append(TreeEntry(rect=[1, 1, 2, 2], parent=root_node))
     root_node.calculate_mbrs()
-    for _ in tqdm.tqdm(range(10)):
+    for _ in tqdm.tqdm(range(50)):
         insert_entry(random_rect())
 
 
@@ -249,12 +249,12 @@ ax.locator_params(nbins=10, tight=True)
 # draw
 plt.axis('equal')
 
+rectangles = []
+nodes = []
+traverse_tree_and_collect_entries(root_node, rectangles, nodes)
 
 def draw_rectangles(search_rect):
     ax.clear()
-    rectangles = []
-    nodes = []
-    traverse_tree_and_collect_entries(root_node, rectangles, nodes)
     for ent in rectangles:
         x1, y1, x2, y2 = ent.mbr
         colour = ent.color
@@ -281,9 +281,6 @@ def draw_rectangles(search_rect):
 
 
 def paint_search_rects():
-    rectangles = []
-    nodes = []
-    traverse_tree_and_collect_entries(root_node, rectangles, nodes)
     for x in rectangles:
         x.color = (0, 0, 0)
     for x in nodes:
@@ -292,7 +289,7 @@ def paint_search_rects():
         y.color = (0, 1, 0)
 
 
-search = [100,100, 1, 0.5]
+search = [500,500, 1, 0.5]
 draw_rectangles(search)
 out = []
 search_tree(root_node, search, out)
@@ -310,9 +307,9 @@ if not DRAW_COOL_ASS_CIRCLE_THING:
 else:
     ran = 0
     while True:
-        ran += 0.01
+        ran += 0.03
 
-        plt.pause(0.02)
+        plt.pause(0.01)
         search[2] = math.sin(ran)
         search[3] = math.cos(ran)
         out.clear()
