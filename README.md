@@ -5,9 +5,9 @@ Main.py: Simple 2d demo - Exhaustive method only. Boolean SEARCH_DEMO controls t
 
 main3d.py: 3d demo - Also exhaustive method only
 
-main_circle: circular demo
+main_circle: circular demo (Exhaustive only)
 
-math_utils: non functional utility functions
+math_utils: Utility functions
 
 performance_graphs: Linear/Quadratic/4Axes comparisons. Changing `rect_generator = uniform_dist` to one of the three generator functions to make the graphs shown in the paper
 
