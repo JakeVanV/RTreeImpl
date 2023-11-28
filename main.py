@@ -290,6 +290,9 @@ def draw_rectangles(search_rect):
     traverse_tree_and_collect_entries(root_node, rectangles, nodes)
     for ent in rectangles:
         x1, y1, x2, y2 = ent.mbr
+
+
+
         colour = ent.color
         c2 = colour + (0.3,)
         ax.add_patch(patches.Rectangle((x1, y1), x2 - x1, y2 - y1, fill=True, linewidth=2,

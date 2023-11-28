@@ -53,7 +53,7 @@ def calc_mbr(rs: List[Circle]):
     x1 /= len(rs)
     y1 /= len(rs)
     circ = Circle(x1, y1, 1)
-    max_distance_circle = max(rs, key=lambda c: circ.distance(c) + c.radius)  # im so smart
+    max_distance_circle = max(rs, key=lambda c: circ.distance(c) + c.radius)
     max_distance = max_distance_circle.distance(circ) + max_distance_circle.radius
     circ.radius = max_distance
     return circ
