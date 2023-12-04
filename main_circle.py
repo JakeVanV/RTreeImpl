@@ -45,7 +45,7 @@ class TreeEntry:
 
 
 random.seed(1)
-def calc_mbr(rs: List[Circle]):
+def calc_mbr_old(rs: List[Circle]):
     x1, y1 = 0, 0
     for rect in rs:
         x1 += rect.x1
@@ -56,6 +56,41 @@ def calc_mbr(rs: List[Circle]):
     max_distance_circle = max(rs, key=lambda c: circ.distance(c) + c.radius)
     max_distance = max_distance_circle.distance(circ) + max_distance_circle.radius
     circ.radius = max_distance
+    return circ
+
+def calc_mbr(rs: List[Circle]):
+    if len(rs) == 1:
+        return rs[0]
+    if len(rs) == 2:
+        x1 = (rs[0].x1 + rs[1].x1)/2
+        y1 = (rs[0].y1 + rs[1].y1)/2
+        circ = Circle(x1, y1, 1)
+        circ.radius = max((circ.distance(rs[0]) + rs[0].radius), (circ.distance(rs[1]) + rs[1].radius))
+        return circ
+    all_combos = itertools.combinations(rs, 3)
+    max_combo = max(all_combos, key=lambda c: c[1].distance(c[0]) + c[1].distance(c[2]) + c[0].distance(c[2])
+                                              + c[0].radius + c[1].radius + c[2].radius)
+    x1 = (max_combo[0].x1 + max_combo[1].x1 + max_combo[2].x1) / 3
+    y1 = (max_combo[0].y1 + max_combo[1].y1 + max_combo[2].y1) / 3
+
+    circ = Circle(x1, y1, 1)
+    d1 = circ.distance(max_combo[0]) + max_combo[0].radius
+    d2 = circ.distance(max_combo[1]) + max_combo[1].radius
+    d3 = circ.distance(max_combo[2]) + max_combo[2].radius
+    circ.radius = max(d1, d2, d3)
+    return circ
+def calc_mbr_DOESNT_WORK(rs: List[Circle]):
+    if len(rs) == 1:
+        return rs[0]
+    all_combos = itertools.combinations(rs, 2)
+    max_combo = max(all_combos, key=lambda c: c[1].distance(c[0]) + c[0].radius + c[1].radius)
+    x1 = (max_combo[0].x1 + max_combo[1].x1) / 2
+    y1 = (max_combo[0].y1 + max_combo[1].y1) / 2
+
+    circ = Circle(x1, y1, 1)
+    d1 = circ.distance(max_combo[0]) + max_combo[0].radius
+    d2 = circ.distance(max_combo[1]) + max_combo[1].radius
+    circ.radius = max(d1, d2)
     return circ
 
 
