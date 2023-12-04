@@ -29,8 +29,6 @@ def from_root(root):
 
     traverse_and_add(t, root)
 
-
-
     ts = TreeStyle()
     ts.show_leaf_name = True
     t.show(tree_style=ts)

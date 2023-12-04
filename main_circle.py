@@ -310,10 +310,12 @@ def on_press(event):
         insert_entry(random_rect())
         draw_plot()
         fig.canvas.draw()
+    if event.key == 'm':
+        draw_tree.from_root(root_node)
 
 
 fig.canvas.mpl_connect('key_press_event', on_press)
-draw_tree.from_root(root_node)
+
 
 while True:
     plt.pause(0.1)
