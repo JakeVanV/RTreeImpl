@@ -1,4 +1,12 @@
 # RTreeImpl
+Implementation for a paper on R-Trees.
+See "paper.pdf" for the paper.
+
+## Example: `python3 performance_graphs.py`
+![image](https://github.com/JakeVanV/RTreeImpl/assets/60329357/355ec9d7-956e-4ba7-a288-38889bac191c)
+
+
+# Files
 Each file is for a different part of the project:
 
 Main.py: Simple 2d demo - Exhaustive method only. Boolean SEARCH_DEMO controls the search demo
